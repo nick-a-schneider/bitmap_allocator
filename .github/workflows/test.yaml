@@ -10,27 +10,25 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        config:
+          - mapsize: 8
+            indexsize: 16
+          - mapsize: 8
+            indexsize: 32
+          - mapsize: 16
+            indexsize: 16
+          - mapsize: 16
+            indexsize: 32
+          - mapsize: 32
+            indexsize: 32
 
     steps:
     - name: Checkout Codebase
       uses: actions/checkout@v2
 
-    - name: Install Tools
-      run: |
-        sudo apt-get update
-
-    - name: Build Allocator with 8bit bitmaps and 8bit indexing
-      run: cd test && make run-test MAPSIZE=8 INDEXSIZE=16
-
-    - name: Build Allocator with 8bit bitmaps and 16bit indexing
-      run: cd test && make run-test MAPSIZE=8 INDEXSIZE=32
-
-    - name: Build Allocator with 16bit bitmaps and 16bit indexing
-      run: cd test && make run-test MAPSIZE=16 INDEXSIZE=16
-
-    - name: Build Allocator with 16bit bitmaps and 32bit indexing
-      run: cd test && make run-test MAPSIZE=16 INDEXSIZE=32
-
-    - name: Build Allocator with 32bit bitmaps and 32bit indexing
-      run: cd test && make run-test MAPSIZE=32 INDEXSIZE=32
+    - name: Build Allocator with ${{ matrix.config.mapsize }}bit bitmaps and ${{ matrix.config.indexsize }}bit indexing
+      run: cd test && make run-test MAPSIZE=${{ matrix.config.mapsize }} INDEXSIZE=${{ matrix.config.indexsize }}
