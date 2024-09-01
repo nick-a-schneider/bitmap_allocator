@@ -4,7 +4,7 @@
         {
             "label": "Build Unit Test",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/test; make"
+            "command": "cd ${workspaceFolder}/test; make MAPSIZE=16 INDEXSIZE=32",
         }
     ]
 }

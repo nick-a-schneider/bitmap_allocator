@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Debug",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/test"
+            ],
+            "defines": [
+                "MAPSIZE=16",
+                "INDEXSIZE=32"
+            ],
+            "cStandard": "c11"
+        }
+    ],
+    "version": 4
+}

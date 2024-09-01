@@ -12,7 +12,7 @@
  * @param bitmap The bitmap to be modified
  * @param index The index of the bit to be enabled
  */
-void setBit(mapSize_t* bitmap, mapSize_t index);
+void setBit(mapSize_t* bitmap, indexSize_t index);
 
 /**
  * @brief Sets the indexed bit to false.
@@ -20,7 +20,7 @@ void setBit(mapSize_t* bitmap, mapSize_t index);
  * @param bitmap The bitmap to be modified
  * @param index The index of the bit to be disabled
  */
-void clearBit(mapSize_t* bitmap, mapSize_t index);
+void clearBit(mapSize_t* bitmap, indexSize_t index);
 
 /**
  * @brief Get the value of the indexed bit.
@@ -28,7 +28,7 @@ void clearBit(mapSize_t* bitmap, mapSize_t index);
  * @param bitmap The bitmap to be sampled
  * @param index The index of the bit to be sampled
  */
-bool getBit(mapSize_t* bitmap, mapSize_t index);
+bool getBit(mapSize_t* bitmap, indexSize_t index);
 
 /**
  * @brief Finds a contiguous sequence of free blocks.
@@ -44,7 +44,7 @@ bool getBit(mapSize_t* bitmap, mapSize_t index);
  * @param size The size of the bitmap
  * @return The index of the first block in the contiguous sequence if found, or MAPSIZE_MAX if not found
  */
-mapSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, mapSize_t size);
+indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, indexSize_t size);
 
 /* -- Public Functions----------------------------------------------------- */
 
@@ -56,12 +56,12 @@ mapSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, mapSiz
  *   is calculated based on the number of blocks that can fit in the provided memory.
  * - The other portion of the memory will be used to store the allocated blocks.
  */
-void initAllocator(Allocator* allocator, mapSize_t block_size, void* memory, mapSize_t size) {
+void initAllocator(Allocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
     // Calculate the number of blocks that can fit in the provided memory
-    mapSize_t num_blocks = size / block_size;
+    indexSize_t num_blocks = size / block_size;
     // Calculate the size of the bitmap portion of the memory region
-    mapSize_t num_blocks_rounded = (num_blocks + MAPSIZE - 1) / MAPSIZE;
-    mapSize_t bitmap_size = num_blocks_rounded * 2 * sizeof(mapSize_t);
+    indexSize_t num_blocks_rounded = (num_blocks + MAPSIZE - 1) / MAPSIZE;
+    indexSize_t bitmap_size = num_blocks_rounded * 2 * sizeof(mapSize_t);
     // Initialize the allocator with the calculated values
     allocator->bitmaps.size = (size - bitmap_size) / block_size;  // Number of blocks in the memory region
     allocator->bitmaps.used = (mapSize_t*)memory;  // Pointer to the used bitmap
@@ -81,17 +81,17 @@ void initAllocator(Allocator* allocator, mapSize_t block_size, void* memory, map
  * It then returns a pointer to the start of the allocated block.
  * If no contiguous free blocks are available, it returns NULL.
  */
-void* allocate(Allocator* allocator, mapSize_t size) {
+void* allocate(Allocator* allocator, indexSize_t size) {
     // Calculate the number of blocks needed to allocate the requested size
-    mapSize_t num_blocks = (size + allocator->block_size - 1) / allocator->block_size;
+    indexSize_t num_blocks = (size + allocator->block_size - 1) / allocator->block_size;
     // Find the index of the first contiguous free block in the bitmap
-    mapSize_t start_index = findContiguousFreeBlocks(num_blocks, allocator->bitmaps.used, allocator->bitmaps.size);
+    indexSize_t start_index = findContiguousFreeBlocks(num_blocks, allocator->bitmaps.used, allocator->bitmaps.size);
     // If no contiguous free blocks are available, return NULL
     if (start_index == MAPSIZE_MAX) {
         return NULL;
     }
     // Mark the allocated blocks as used in the bitmap
-    for (mapSize_t i = 0; i < num_blocks; i++) {
+    for (indexSize_t i = 0; i < num_blocks; i++) {
         setBit(allocator->bitmaps.used, start_index + i);
     }
     // Mark the allocated blocks as allocated in the bitmap
@@ -109,7 +109,7 @@ void* allocate(Allocator* allocator, mapSize_t size) {
  */
 bool deallocate(Allocator* allocator, void* ptr) {
     // Calculate the index of the block in the allocator's memory
-    mapSize_t index = ((uint8_t*)ptr - (uint8_t*)allocator->memory.head) / allocator->block_size;
+    indexSize_t index = ((uint8_t*)ptr - (uint8_t*)allocator->memory.head) / allocator->block_size;
     // Check if the block is currently allocated
     if (!getBit(allocator->bitmaps.heads, index)) return false;
     // Clear the allocated bit for the block
@@ -125,9 +125,9 @@ bool deallocate(Allocator* allocator, void* ptr) {
 
 /* -- Private Functions --------------------------------------------------- */
 
-mapSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, mapSize_t size) {
-    mapSize_t count = 0; // Initialize a counter to track consecutive free blocks
-    for (mapSize_t i = 0; i < size; i++) { // Iterate through each bit in the bitmap
+indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, indexSize_t size) {
+    indexSize_t count = 0; // Initialize a counter to track consecutive free blocks
+    for (indexSize_t i = 0; i < size; i++) { // Iterate through each bit in the bitmap
         if (!getBit(used, i)) { // If the bit is not set (i.e., the block is free)
             count++; // Increment the counter
             if (count == num_blocks) { // If the counter equals the number of blocks needed
@@ -140,14 +140,14 @@ mapSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, mapSiz
     return MAPSIZE_MAX; // Return MAPSIZE_MAX if no suitable sequence is found
 }
 
-void setBit(mapSize_t* bitmap, mapSize_t index) {
+void setBit(mapSize_t* bitmap, indexSize_t index) {
     bitmap[index / MAPSIZE] |= (1ULL << (index % MAPSIZE));
 }
 
-void clearBit(mapSize_t* bitmap, mapSize_t index) {
+void clearBit(mapSize_t* bitmap, indexSize_t index) {
     bitmap[index / MAPSIZE] &= ~(1ULL << (index % MAPSIZE));
 }
 
-bool getBit(mapSize_t* bitmap, mapSize_t index) {
+bool getBit(mapSize_t* bitmap, indexSize_t index) {
     return (bitmap[index / MAPSIZE] & (1ULL << (index % MAPSIZE))) != 0;
 }

@@ -5,7 +5,7 @@
             "name": "Debug Unit Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/test/build/test_allocator.test",
+            "program": "${workspaceFolder}/test/build/m_16/i_32/test_allocator.test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

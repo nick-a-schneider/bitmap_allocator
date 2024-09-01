@@ -1,9 +1,9 @@
-#include "allocator.h"
+#include "../allocator.h"
 #include "test_utils.h"
 #include <stdbool.h>
 
 // recreation of private function for test purposes
-bool get_bit(mapSize_t* bitmap, mapSize_t index) {
+bool get_bit(mapSize_t* bitmap, indexSize_t index) {
     return (bitmap[index / MAPSIZE] & (1ULL << (index % MAPSIZE))) != 0;
 }
 
@@ -14,12 +14,12 @@ void testInitAllocator(void) {
         uint8_t memory[128];
         initAllocator(&allocator, 16, memory, 128);
 
-        ASSERT_EQUAL_INT(allocator.memory.size, 112, "incorrect size after initialization");
+        ASSERT_EQUAL_INT(allocator.memory.size, 128 - 16, "incorrect size after initialization");
         ASSERT_EQUAL_INT(allocator.block_size, 16, "incorrect block size after initialization");
         ASSERT_EQUAL_INT(allocator.bitmaps.size, 7, "incorrect bitmap size after initialization"); 
 
         ASSERT_EQUAL_PTR((uint8_t*)(allocator.bitmaps.used), memory, "heads bitmap placement is wrong"); 
-        ASSERT_EQUAL_PTR((uint8_t*)(allocator.bitmaps.heads), memory + sizeof(mapSize_t),   "used bitmap placement is wrong");  
+        ASSERT_EQUAL_PTR((uint8_t*)(allocator.bitmaps.heads), memory + sizeof(mapSize_t), "used bitmap placement is wrong");  
         ASSERT_EQUAL_PTR((uint8_t*)(allocator.memory.head), memory + 2 * sizeof(mapSize_t), "heads bitmap placement is wrong"); 
 
     } CASE_COMPLETE;
@@ -66,23 +66,39 @@ void testAllocate() {
         }
     } CASE_COMPLETE;
 
-    TEST_CASE("allocating block that spans two 16bit words in the bitmap") {
+    TEST_CASE("allocating block that spans two bitmap blocks") {
         Allocator allocator;
-        uint8_t memory[4096];
-        for (int index = 0; index < 4096; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 512);
+        uint8_t memory[4 * MAPSIZE];
+        uint16_t offset = 0;
 
-        void* block1 = allocate(&allocator, 16 * 20);
-        void* block2 = allocate(&allocator, 16);
+        for (int index = 0; index < (4 * MAPSIZE); index++) memory[index] = 0;
+        initAllocator(&allocator, 1, memory, 4 * MAPSIZE);
+
+        void* block1 = allocate(&allocator, (3 * MAPSIZE) / 2);
+        void* block2 = allocate(&allocator, MAPSIZE);
+
         ASSERT_NOT_EQUAL_PTR(block1, NULL, "valid allocation returned null");
         ASSERT_NOT_EQUAL_PTR(block2, NULL, "valid allocation returned null");
 
-        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "heads bit not set");
-        for (uint16_t i = 0; i < 20; i++) {
-            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "used bit not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "block1: heads bit not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 0), "block1: used bit not set");
+
+        for (uint16_t i = 1; i < ((3 * MAPSIZE) / 2); i++) {
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "block1: used bit not set");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "block1: heads bit was set");
         }
-        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 20), "heads bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 20), "used bit not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, ((3 * MAPSIZE) / 2)), "block2: heads bit not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, ((3 * MAPSIZE) / 2)), "block2: used bit not set");
+
+        for (uint16_t i = 1; i < MAPSIZE; i++) {
+            offset = ((3 * MAPSIZE) / 2);
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, offset + i), "block2: used bit was not set");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, offset + i), "block2: heads bit was set");
+        }
+        for (uint16_t i = ((3 * MAPSIZE) / 2) + MAPSIZE; i < 4 * MAPSIZE; i++) {
+            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i), "free: used bit was set");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "free: heads bit was set");
+        }
 
     } CASE_COMPLETE;
 
