@@ -1,7 +1,3 @@
-/**
-* \brief This module defines the custom bitmap allocator used by the OS
-*/
-/* -- Includes ------------------------------------------------------------ */
 #include "allocator.h"
 
 /* -- Private Function Declarations --------------------------------------- */
