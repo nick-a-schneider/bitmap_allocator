@@ -30,9 +30,5 @@ jobs:
     - name: Checkout Codebase
       uses: actions/checkout@v2
 
-    - name: Install Tools
-      run: |
-        sudo apt-get update
-
     - name: Build Allocator with ${{ matrix.config.mapsize }}bit bitmaps and ${{ matrix.config.indexsize }}bit indexing
       run: cd test && make run-test MAPSIZE=${{ matrix.config.mapsize }} INDEXSIZE=${{ matrix.config.indexsize }}
