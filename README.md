@@ -1,3 +1,6 @@
+![Coverage Status](https://github.com/nick-a-schneider/bitmap_allocator/actions/workflows/test.yaml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 **Memory Allocator Project Overview**
 =====================================
 
