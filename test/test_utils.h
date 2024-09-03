@@ -49,23 +49,35 @@
 #define MAGENTA "\x1b[35m"
 #define YELLOW  "\x1b[33m"
 
+
+/* -- Printing -----------------------------------------------------------*/
 /**
  * @brief Print a message to the console in the specified color.
  * 
  * @param col The color to use for the message.
  * @param msg The message to print.
+ * @param (optional) ... The arguments to format the message.
  */
-#define LOG(msg, col)   printf(col "%s" RESET, msg);
+#define MSG(col, msg, ...)   printf(col msg RESET, ##__VA_ARGS__)
+
+#ifdef DEBUG
+    #define LOG_DEBUG(msg, ...) MSG(CYAN,   "DEBUG: "   msg, ##__VA_ARGS__)
+#else
+    #define LOG_DEBUG(msg, ...)
+#endif
+#define LOG_INFO(msg, ...)  MSG(GREEN,  "INFO: "    msg, ##__VA_ARGS__)
+#define LOG_WARN(msg, ...)  MSG(YELLOW, "WARN: "    msg, ##__VA_ARGS__)
+#define LOG_ERROR(msg, ...) MSG(RED,    "ERROR: "   msg, ##__VA_ARGS__)
 
 /**
  * @brief Evaluate a statement and print its name.
  * 
  * @param arg The test function to evaluate.
  */
-#define TEST_EVAL(arg)                      \
-    printf(MAGENTA "%s():\n" RESET, #arg);  \
-    depth++;                                \
-    arg();                                  \
+#define TEST_EVAL(arg)              \
+    MSG(MAGENTA, "%s():\n", #arg);  \
+    depth++;                        \
+    arg();                          \
     depth--;
     
 /**
@@ -73,64 +85,188 @@
  * 
  * @param name The name of the test case.
  */
-#define TEST_CASE(name)                         \
-    clearCase();                                \
-    printIndent();                              \
-    printf(BLUE "case: " RESET "%s\n", name);   \
-    incDepth();                                 \
+#define TEST_CASE(name)                     \
+    clearCase();                            \
+    printIndent();                          \
+    MSG(BLUE, "case: " RESET "%s\n", name); \
+    incDepth();                             \
 
 /**
  * @brief Indicate that the current test case has completed.
  */
-#define CASE_COMPLETE                       \
-    if(caseHasFailed()) failTest();         \
-    else {                                  \
-        printIndent();                      \
-        printf(GREEN ":: passed\n" RESET);  \
-    } decDepth();                           \
+#define CASE_COMPLETE               \
+    if(caseHasFailed()) failTest(); \
+    else {                          \
+        printIndent();              \
+        MSG(GREEN, ":: passed\n");  \
+    } decDepth();                   \
 
 /**
  * @brief Print a message indicating that a test case is not yet implemented.
  * 
  */
-#define CASE_NOT_IMPLEMENTED                    \
-    printIndent();                              \
-    printf(YELLOW "NOT IMPLEMENTED\n" RESET);   \
-    decDepth();                                 \
+#define CASE_NOT_IMPLEMENTED        \
+    printIndent();                  \
+    LOG_WARN("NOT IMPLEMENTED\n");  \
+    decDepth();                     \
 
-#define ASSERT_BOOL__(cond, cond_str, expression, msg)                              \
-    if (cond(expression)) {                                                         \
-        failCase();                                                                 \
-        printIndent();                                                              \
-        printf(RED "ASSERT_" cond_str ": [%s] :: %s\n" RESET, #expression, msg);    \
+
+/* -- Assertions ----------------------------------------------------------*/
+/**
+ * @brief internal helper macro for boolean assertions
+ * 
+ * @param cond The condition to assert
+ * @param cond_str The string representation of the condition
+ * @param expression The expression to evaluate
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ * 
+ */
+#define ASSERT_BOOL__(cond, cond_str, expression, msg, ...)                             \
+    if (cond(expression)) {                                                             \
+        failCase();                                                                     \
+        printIndent();                                                                  \
+        LOG_ERROR("ASSERT_" cond_str ": [%s] :: " msg "\n", #expression, ##__VA_ARGS__);\
     }
 
-#define ASSERT_TRUE(expression, msg)  ASSERT_BOOL__(!, "TRUE",expression, msg)
-#define ASSERT_FALSE(expression, msg) ASSERT_BOOL__( , "FALSE", expression, msg)
+/**
+ * @brief Assert that a condition is true
+ * 
+ * @param expression The expression to evaluate
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_TRUE(expression, msg, ...)   \
+    ASSERT_BOOL__(!, "TRUE", expression, msg, ##__VA_ARGS__)
 
-#define ASSERT_CHECK__(cond, cond_str, type, a, b, msg)                     \
-    if (a cond b) {                                                         \
-        failCase();                                                         \
-        printIndent();                                                      \
-        printf(RED "ASSERT_" cond_str "EQUAL: %s "#cond" %s ["              \
-        "%" type " "#cond" %" type "] :: %s\n" RESET, #a, #b, a, b, msg);   \
+/**
+ * @brief Assert that a condition is false
+ * 
+ * @param expression The expression to evaluate
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_FALSE(expression, msg, ...)  \
+    ASSERT_BOOL__( , "FALSE", expression, msg, ##__VA_ARGS__)
+
+/**
+ * @brief internal helper macro for equality assertions
+ * 
+ * @param cond The condition to assert
+ * @param cond_str The string representation of the condition
+ * @param type The type of the expression
+ * @param a The first expression
+ * @param b The second expression
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_EQUAL__(cond, cond_str, type, a, b, msg, ...)                    \
+    if (a cond b) {                                                             \
+        failCase();                                                             \
+        printIndent();                                                          \
+        LOG_ERROR("ASSERT_" cond_str "EQUAL: %s "#cond" %s [%" type " "         \
+        #cond " %" type "] :: " msg "\n" RESET, #a, #b, a, b, ##__VA_ARGS__);   \
     }
 
-#define ASSERT_EQUAL_PTR(a, b, msg)           ASSERT_CHECK__(!=, "", "p", a, b, msg)
-#define ASSERT_NOT_EQUAL_PTR(a, b, msg)       ASSERT_CHECK__(==, "NOT_", "p", a, b, msg)
+/**
+ * @brief Assert that two pointers are equal
+ * 
+ * @param a The first pointer
+ * @param b The second pointer
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_EQUAL_PTR(a, b, msg, ...)    \
+    ASSERT_EQUAL__(!=, "", "p", a, b, msg, ##__VA_ARGS__)
 
-#define ASSERT_EQUAL_INT(a, b, msg)           ASSERT_CHECK__(!=, "", "d", a, b, msg)
-#define ASSERT_NOT_EQUAL_INT(a, b, msg)       ASSERT_CHECK__(==, "NOT_", "d", a, b, msg)
+/**
+ * @brief Assert that two pointers are not equal
+ * 
+ * @param a The first pointer
+ * @param b The second pointer
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_NOT_EQUAL_PTR(a, b, msg, ...)    \
+    ASSERT_EQUAL__(==, "NOT_", "p", a, b, msg, ##__VA_ARGS__)
 
-#define ASSERT_EQUAL_CHAR(a, b, msg)          ASSERT_CHECK__(!=, "", "c", a, b, msg)
-#define ASSERT_NOT_EQUAL_CHAR(a, b, msg)      ASSERT_CHECK__(==, "NOT_", "c", a, b, msg)
+/**
+ * @brief Assert that two integers are equal
+ * 
+ * @param a The first integer
+ * @param b The second integer
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_EQUAL_INT(a, b, msg, ...)    \
+    ASSERT_EQUAL__(!=, "", "d", a, b, msg, ##__VA_ARGS__)
 
-#define ASSERT_EQUAL_STR(a, b, len, msg)    \
-    for (int i = 0; i < (len); i++)  ASSERT_EQUAL_CHAR((a)[i], (b)[i], msg);  
-#define ASSERT_NOT_EQUAL_STR(a, b, len, msg)     \
-    for (int i = 0; i < (len); i++)  ASSERT_NOT_EQUAL_CHAR((a)[i], (b)[i], msg);
+/**
+ * @brief Assert that two integers are not equal
+ * 
+ * @param a The first integer
+ * @param b The second integer
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_NOT_EQUAL_INT(a, b, msg, ...)    \
+    ASSERT_EQUAL__(==, "NOT_", "d", a, b, msg, ##__VA_ARGS__)
 
-/* -- Types --------------------------------------------------------------- */
+/**
+ * @brief Assert that two characters are equal
+ * 
+ * @param a The first character
+ * @param b The second character
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_EQUAL_CHAR(a, b, msg, ...)   \
+    ASSERT_EQUAL__(!=, "", "c", a, b, msg, ##__VA_ARGS__)
+
+/**
+ * @brief Assert that two characters are not equal
+ * 
+ * @param a The first character
+ * @param b The second character
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_NOT_EQUAL_CHAR(a, b, msg, ...)   \
+    ASSERT_EQUAL__(==, "NOT_", "c", a, b, msg, ##__VA_ARGS__)
+
+/**
+ * @brief Assert that two strings are equal
+ * 
+ * iterates over the two strings and asserts that each character is equal
+ * 
+ * @param a The first string
+ * @param b The second string
+ * @param len The length of the strings
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_EQUAL_STR(a, b, len, msg, ...)                   \
+    for (int i = 0; i < (len); i++) {                           \
+        ASSERT_EQUAL_CHAR((a)[i], (b)[i], msg, ##__VA_ARGS__);  \
+    }
+
+/**
+ * @brief Assert that two strings are not equal
+ * 
+ * iterates over the two strings and asserts that each character is not equal
+ * 
+ * @param a The first string
+ * @param b The second string
+ * @param len The length of the strings
+ * @param msg The message to print
+ * @param (optional) ... The arguments to format the message
+ */
+#define ASSERT_NOT_EQUAL_STR(a, b, len, msg, ...)                   \
+    for (int i = 0; i < (len); i++) {                               \
+        ASSERT_NOT_EQUAL_CHAR((a)[i], (b)[i], msg, ##__VA_ARGS__);  \
+    }
+
+/* -- Global Variables ----------------------------------------------------- */
 
 bool test_failed = false; // status of the entire test suite.
 bool case_failed = false; // status of the current test

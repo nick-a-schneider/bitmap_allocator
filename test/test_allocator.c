@@ -29,8 +29,13 @@ void testInitAllocator(void) {
     } CASE_NOT_IMPLEMENTED;
 
     TEST_CASE("head aligned correctly") {
-        // TODO: verify that the head is aligned correctly
-    } CASE_NOT_IMPLEMENTED;
+        Allocator allocator;
+        uint8_t memory[4096];
+        for (uint16_t block_size = 64; block_size  > 0; block_size--) {
+            initAllocator(&allocator, block_size, memory, 4096);
+            ASSERT_TRUE(((uintptr_t)(allocator.memory.head)) % (2 * sizeof(mapSize_t)) == 0, "head not aligned for block size %d", block_size);
+        }
+    } CASE_COMPLETE;
 
 }
 
@@ -47,7 +52,7 @@ void testAllocate() {
         ASSERT_EQUAL_PTR(block2, NULL, "invalid allocation returned non-null");
         ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "heads bit not set");
         for (uint16_t i = 0; i < allocator.bitmaps.size; i++) {
-            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "used bit not set");
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "used bit[%d] was not set", i);
         }
     } CASE_COMPLETE;
         
@@ -61,8 +66,8 @@ void testAllocate() {
         ASSERT_EQUAL_PTR(block, NULL, "invalid allocation returned non-null");
 
         for (uint16_t i = 0; i < allocator.bitmaps.size; i++) {
-            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit was set");
-            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i),  "used bit was set");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit[%d] was set", i);
+            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i),  "used bit[%d] was set",  i);
         }
     } CASE_COMPLETE;
 
@@ -84,20 +89,20 @@ void testAllocate() {
         ASSERT_TRUE(get_bit(allocator.bitmaps.used, 0), "block1: used bit not set");
 
         for (uint16_t i = 1; i < ((3 * MAPSIZE) / 2); i++) {
-            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "block1: used bit not set");
-            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "block1: heads bit was set");
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, i), "block1: used bit[%d] not set", i);
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "block1: heads bit[%d] was set", i);
         }
         ASSERT_TRUE(get_bit(allocator.bitmaps.heads, ((3 * MAPSIZE) / 2)), "block2: heads bit not set");
         ASSERT_TRUE(get_bit(allocator.bitmaps.used, ((3 * MAPSIZE) / 2)), "block2: used bit not set");
 
         for (uint16_t i = 1; i < MAPSIZE; i++) {
             offset = ((3 * MAPSIZE) / 2);
-            ASSERT_TRUE(get_bit(allocator.bitmaps.used, offset + i), "block2: used bit was not set");
-            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, offset + i), "block2: heads bit was set");
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, offset + i), "block2: used bit[%d] not set", i);
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, offset + i), "block2: heads bit[%d] was set", i);
         }
         for (uint16_t i = ((3 * MAPSIZE) / 2) + MAPSIZE; i < 4 * MAPSIZE; i++) {
-            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i), "free: used bit was set");
-            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "free: heads bit was set");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i), "free: used bit[%d] was set", i);
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "free: heads bit[%d] was set", i);
         }
 
     } CASE_COMPLETE;
@@ -115,12 +120,12 @@ void testAllocate() {
 
         ASSERT_EQUAL_PTR((uint8_t*)block1 + 32, (uint8_t*)block2, "blocks not adjacent");
 
-        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "heads bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 2), "heads bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 0), "used bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 1), "used bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 2), "used bit not set");
-        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 3), "used bit not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "heads bit[0] not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 2), "heads bit[2] not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 0), "used bit[0] not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 1), "used bit[1] not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 2), "used bit[2] not set");
+        ASSERT_TRUE(get_bit(allocator.bitmaps.used, 3), "used bit[3] not set");
 
     } CASE_COMPLETE;
 }
@@ -154,12 +159,12 @@ void testDeallocate() {
 
         ASSERT_FALSE(get_bit(allocator.bitmaps.heads, 0), "heads bit still set after deallocation");
         for (uint16_t i = 0; i < 12; i++) {
-            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i), "used bit still set after deallocation");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.used, i), "used bit[%d] still set after deallocation", i);
         }
 
         ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 12), "next allocs bit cleared after deallocation");
         for (uint16_t i = 0; i < 20; i++) {
-            ASSERT_TRUE(get_bit(allocator.bitmaps.used, 12 + i), "next used bit cleared after deallocation");
+            ASSERT_TRUE(get_bit(allocator.bitmaps.used, 12 + i), "next used bit[%d] cleared after deallocation", i);
         }
 
         ASSERT_TRUE(deallocate(&allocator, block2), "deallocating block2 failed");
@@ -175,13 +180,13 @@ void testDeallocate() {
 
         ASSERT_FALSE(deallocate(&allocator, block), "invalid block was deallocation without error");
         for (uint16_t i = 0; i < 8; i++) {
-            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit was cleared during invalid deallocation");
+            ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit[%d] was cleared during invalid deallocation", i);
         }
     } CASE_COMPLETE;
 }
 
 int main(void) {
-    LOG("ALLOCATOR TESTS\n", BLUE);
+    LOG_INFO("ALLOCATOR TESTS\n");
     TEST_EVAL(testInitAllocator);
     TEST_EVAL(testAllocate);
     TEST_EVAL(testDeallocate);
