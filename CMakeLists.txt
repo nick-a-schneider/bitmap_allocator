@@ -1,7 +1,6 @@
 # Define the library target
-add_library(mylib STATIC
+add_library(allocator STATIC
     allocator.c
-    allocator.h
 )
 
 target_include_directories(allocator PUBLIC
