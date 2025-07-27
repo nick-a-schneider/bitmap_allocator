@@ -1,5 +1,10 @@
+<!-- ![Codecov](https://codecov.io/gh/nick-a-schneider/bitmap_allocator/branch/main/graph/badge.svg) -->
+<!-- ![Coveralls](https://coveralls.io/repos/github/nick-a-schneider/bitmap_allocator/badge.svg?branch=main) -->
 ![Coverage Status](https://github.com/nick-a-schneider/bitmap_allocator/actions/workflows/test.yaml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+<!-- ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg) -->
+
 
 **Memory Allocator Project Overview**
 =====================================

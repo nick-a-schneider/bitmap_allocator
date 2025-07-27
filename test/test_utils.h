@@ -61,9 +61,9 @@
 #define MSG(col, msg, ...)   printf(col msg RESET, ##__VA_ARGS__)
 
 #ifdef DEBUG
-    #define LOG_DEBUG(msg, ...) MSG(CYAN,   "DEBUG: "   msg, ##__VA_ARGS__)
+#define LOG_DEBUG(msg, ...) MSG(CYAN,   "DEBUG: "   msg, ##__VA_ARGS__)
 #else
-    #define LOG_DEBUG(msg, ...)
+#define LOG_DEBUG(msg, ...)
 #endif
 #define LOG_INFO(msg, ...)  MSG(GREEN,  "INFO: "    msg, ##__VA_ARGS__)
 #define LOG_WARN(msg, ...)  MSG(YELLOW, "WARN: "    msg, ##__VA_ARGS__)
@@ -85,11 +85,11 @@
  * 
  * @param name The name of the test case.
  */
-#define TEST_CASE(name)                     \
-    clearCase();                            \
-    printIndent();                          \
-    MSG(BLUE, "case: " RESET "%s\n", name); \
-    incDepth();                             \
+#define TEST_CASE(name, ...)                            \
+    clearCase();                                        \
+    printIndent();                                      \
+    MSG(BLUE, "case: " RESET  name"\n", ##__VA_ARGS__); \
+    incDepth();                                         \
 
 /**
  * @brief Indicate that the current test case has completed.
@@ -169,7 +169,7 @@
     }
 
 /**
- * @brief Assert that two pointers are equal
+ * @brief Assert that two pointers are equal: `a == b`
  * 
  * @param a The first pointer
  * @param b The second pointer
@@ -180,7 +180,7 @@
     ASSERT_EQUAL__(!=, "", "p", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two pointers are not equal
+ * @brief Assert that two pointers are not equal: `a != b`
  * 
  * @param a The first pointer
  * @param b The second pointer
@@ -191,7 +191,7 @@
     ASSERT_EQUAL__(==, "NOT_", "p", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two integers are equal
+ * @brief Assert that two integers are equal: `a == b`
  * 
  * @param a The first integer
  * @param b The second integer
@@ -202,7 +202,7 @@
     ASSERT_EQUAL__(!=, "", "d", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two integers are not equal
+ * @brief Assert that two integers are not equal: `a != b`
  * 
  * @param a The first integer
  * @param b The second integer
@@ -213,7 +213,7 @@
     ASSERT_EQUAL__(==, "NOT_", "d", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two characters are equal
+ * @brief Assert that two characters are equal: `a == b`
  * 
  * @param a The first character
  * @param b The second character
@@ -224,7 +224,7 @@
     ASSERT_EQUAL__(!=, "", "c", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two characters are not equal
+ * @brief Assert that two characters are not equal: `a != b`
  * 
  * @param a The first character
  * @param b The second character
@@ -235,7 +235,7 @@
     ASSERT_EQUAL__(==, "NOT_", "c", a, b, msg, ##__VA_ARGS__)
 
 /**
- * @brief Assert that two strings are equal
+ * @brief Assert that two strings are equal: `a == b`
  * 
  * iterates over the two strings and asserts that each character is equal
  * 
@@ -251,7 +251,7 @@
     }
 
 /**
- * @brief Assert that two strings are not equal
+ * @brief Assert that two strings are not equal: `a != b`
  * 
  * iterates over the two strings and asserts that each character is not equal
  * 
