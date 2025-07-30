@@ -4,13 +4,23 @@
         {
             "label": "Configure CMake",
             "type": "shell",
-            "command": "cmake -G \"Unix Makefiles\" . -B build -DBUILD_TESTS=ON",
+            "command": "cmake",
+            "args": [
+                "-G", "Unix Makefiles",
+                "-S", ".",
+                "-B", "build",
+                "-DBUILD_TESTS=ON"
+            ],
             "icon": { "id": "tools" },
         },
         {
             "label": "Compile Unit Tests",
             "type": "shell",
-            "command": "cmake --build build --verbose",
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "--verbose"
+            ],
             "icon": { "id": "gear" },
         }
     ]

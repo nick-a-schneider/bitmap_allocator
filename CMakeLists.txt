@@ -4,8 +4,8 @@ project(bitmap_allocator C)
 
 option(BUILD_TESTS "Build unit tests" OFF)
 
-set(INDEXSIZE 16 cache STRING "Index size used by allocator")
-set(INDEXSIZE 32 cache STRING "Index size used by allocator")
+set(INDEXSIZE 16 CACHE STRING "Index size used by allocator")
+set(INDEXSIZE 32 CACHE STRING "Index size used by allocator")
 add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
 
 set(CMAKE_BUILD_TYPE Debug)
