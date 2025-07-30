@@ -1,4 +1,4 @@
-#include "../allocator.h"
+#include "allocator.h"
 #include "test_utils.h"
 #include <stdbool.h>
 
@@ -36,7 +36,6 @@ void testInitAllocator(void) {
             ASSERT_TRUE(((uintptr_t)(allocator.memory.head)) % (2 * sizeof(mapSize_t)) == 0, "head not aligned for block size %d", block_size);
         }
     } CASE_COMPLETE;
-
 }
 
 void testAllocate() {

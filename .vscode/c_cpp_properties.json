@@ -2,15 +2,10 @@
     "configurations": [
         {
             "name": "Debug",
-            "includePath": [
-                "${workspaceFolder}",
-                "${workspaceFolder}/test"
-            ],
-            "defines": [
-                "MAPSIZE=16",
-                "INDEXSIZE=32"
-            ],
-            "cStandard": "c11"
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "cStandard": "c11",
+            "cppStandard": "c++17", // if you're using C++, adjust or remove if only C
+            "intelliSenseMode": "gcc-x86" // or change based on your platform/compiler
         }
     ],
     "version": 4
