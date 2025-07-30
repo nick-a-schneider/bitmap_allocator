@@ -30,5 +30,12 @@ jobs:
     - name: Checkout Codebase
       uses: actions/checkout@v2
 
-    - name: Build Allocator with ${{ matrix.config.mapsize }}bit bitmaps and ${{ matrix.config.indexsize }}bit indexing
-      run: cd test && make run-test MAPSIZE=${{ matrix.config.mapsize }} INDEXSIZE=${{ matrix.config.indexsize }}
+    - name: Configure CMake
+      run: cmake . -B build -DBUILD_TESTS=ON -DMAPSIZE=${{ matrix.config.mapsize }} -DINDEXSIZE=${{ matrix.config.indexsize }}
+
+    - name: compile with with ${{ matrix.config.mapsize }}bit bitmaps and ${{ matrix.config.indexsize }}bit indexing
+      run: cmake --build build
+
+    - name: Run Unit Tests
+      run: cd build/test/ && ./test_allocator
+
