@@ -1,3 +1,8 @@
+option(INDEXSIZE "Index size used by allocator" 8)
+option(MAPSIZE "Map size used by allocator" 16)
+
+add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
+
 if(NOT TARGET test_utils)
     include(FetchContent)
     message(STATUS "Info: Fetching test_utils...")
