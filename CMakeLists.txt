@@ -2,12 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(bitmap_allocator C)
 
-option(BUILD_TESTING "Build unit tests" ON)
-
-if(BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
-endif()
+option(BUILD_TESTS "Build unit tests" OFF)
 
 add_library(bitmap_allocator STATIC src/allocator.c)
 
@@ -20,9 +15,9 @@ add_library(bitmap_allocator::bitmap_allocator ALIAS bitmap_allocator)
 
 install(TARGETS bitmap_allocator
     EXPORT bitmap_allocatorTargets
-    ARCHIVE DESTINATION lib        # <-- Use 'lib', not 'bitmap_allocator'
-    LIBRARY DESTINATION lib        # For shared libs if you add them later
-    RUNTIME DESTINATION bin        # For executables if any
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
 )
 
 install(EXPORT bitmap_allocatorTargets
@@ -32,3 +27,8 @@ install(EXPORT bitmap_allocatorTargets
 )
 
 install(DIRECTORY include/ DESTINATION include)
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
+endif()
