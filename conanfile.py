@@ -28,8 +28,6 @@ class LibBitmapAllocatorConan(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
-        self.copy("*.h", dst="include", src="include")
-        self.copy("*.a", dst="lib", keep_path=False)
         
     def generate(self):
         tc = CMakeToolchain(self)

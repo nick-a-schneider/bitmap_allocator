@@ -9,8 +9,6 @@ if(BUILD_TESTING)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif()
 
-set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/generators ${CMAKE_PREFIX_PATH})
-
 add_library(bitmap_allocator STATIC src/allocator.c)
 
 target_include_directories(bitmap_allocator PUBLIC
