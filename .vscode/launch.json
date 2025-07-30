@@ -5,14 +5,13 @@
             "name": "Debug Unit Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/test/build/m_16/i_32/test_allocator.test",
+            "program": "${workspaceFolder}/build/test/test_allocator.exe",
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "preLaunchTask": "Build Unit Test"
-          },
+          }
     ]
 }

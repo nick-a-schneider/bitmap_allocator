@@ -3,7 +3,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(bitmap_allocator C)
 
 option(BUILD_TESTS "Build unit tests" OFF)
+set(INDEXSIZE 8 CACHE STRING "Index size used by allocator")
+set(INDEXSIZE 16 CACHE STRING "Index size used by allocator")
 
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
 add_library(bitmap_allocator STATIC src/allocator.c)
 
 target_include_directories(bitmap_allocator PUBLIC

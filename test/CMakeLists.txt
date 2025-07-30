@@ -1,8 +1,3 @@
-option(INDEXSIZE "Index size used by allocator" 8)
-option(MAPSIZE "Map size used by allocator" 16)
-
-add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
-
 if(NOT TARGET test_utils)
     include(FetchContent)
     message(STATUS "Info: Fetching test_utils...")
@@ -17,7 +12,6 @@ endif()
 if(NOT TARGET test_utils::test_utils)
     message(FATAL_ERROR "test_utils not found")
 endif()
-
 
 add_executable(test_allocator test_allocator.c)
 target_link_libraries(test_allocator PRIVATE
