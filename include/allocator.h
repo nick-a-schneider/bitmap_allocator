@@ -13,7 +13,9 @@
 #define INDEXSIZE  32
 #endif
 
+#define INDEXSIZE_MAX FWD_MAX(INDEXSIZE)
 #define MAPSIZE_MAX FWD_MAX(MAPSIZE)
+
 #define FWD_MAX(arg) MAX_ARG(arg)
 #define MAX_ARG(arg) UINT##arg##_MAX
 
