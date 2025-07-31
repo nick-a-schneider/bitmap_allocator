@@ -1,6 +1,6 @@
 if(NOT TARGET test_utils)
     include(FetchContent)
-    message(STATUS "Info: Fetching test_utils...")
+    message(STATUS "Fetching test_utils...")
     FetchContent_Declare(
         test_utils
         GIT_REPOSITORY https://github.com/nick-a-schneider/test_utils.git

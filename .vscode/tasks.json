@@ -9,7 +9,8 @@
                 "-G", "Unix Makefiles",
                 "-S", ".",
                 "-B", "build",
-                "-DBUILD_TESTS=ON"
+                "-DBUILD_TESTS=ON",
+                "-DCMAKE_BUILD_TYPE=Debug"
             ],
             "icon": { "id": "tools" },
         },

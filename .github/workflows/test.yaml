@@ -31,10 +31,15 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Configure CMake
-      run: cmake . -B build -DMAPSIZE=${{ matrix.config.mapsize }} -DINDEXSIZE=${{ matrix.config.indexsize }}
+      run: |
+        cmake . -B build \
+          -DMAPSIZE=${{ matrix.config.mapsize }} \
+          -DINDEXSIZE=${{ matrix.config.indexsize }} \
+          -DBUILD_TESTS=ON
 
-    - name: compile with with ${{ matrix.config.mapsize }}bit bitmaps and ${{ matrix.config.indexsize }}bit indexing
-      run: cmake --build build
+    - name: Compile with configured bitmaps and indexing
+      # MAPSIZE=${{ matrix.config.mapsize }} INDEXSIZE=${{ matrix.config.indexsize }}
+      run: cmake --build build --verbose
 
     - name: Run Unit Tests
       run: cd build/test/ && ./test_allocator
