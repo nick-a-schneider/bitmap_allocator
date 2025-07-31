@@ -83,7 +83,7 @@ void* allocate(Allocator* allocator, indexSize_t size) {
     // Find the index of the first contiguous free block in the bitmap
     indexSize_t start_index = findContiguousFreeBlocks(num_blocks, allocator->bitmaps.used, allocator->bitmaps.size);
     // If no contiguous free blocks are available, return NULL
-    if (start_index == MAPSIZE_MAX) {
+    if (start_index == INDEXSIZE_MAX) {
         return NULL;
     }
     // Mark the allocated blocks as used in the bitmap
@@ -133,7 +133,7 @@ indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, inde
             count = 0; // Reset the counter
         }
     }
-    return MAPSIZE_MAX; // Return MAPSIZE_MAX if no suitable sequence is found
+    return INDEXSIZE_MAX; // Return INDEXSIZE_MAX if no suitable sequence is found
 }
 
 void setBit(mapSize_t* bitmap, indexSize_t index) {
