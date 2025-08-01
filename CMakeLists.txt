@@ -4,9 +4,9 @@ project(bitmap_allocator C)
 
 option(BUILD_TESTS "Build unit tests" OFF)
 
-set(INDEXSIZE 16 CACHE STRING "Index size used by allocator")
-set(MAPSIZE   32 CACHE STRING "Index size used by allocator")
-add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
+set(MAPSIZE   16 CACHE STRING "Index size used by allocator")
+set(INDEXSIZE 32 CACHE STRING "Index size used by allocator")
+add_compile_definitions(MAPSIZE=${MAPSIZE} INDEXSIZE=${INDEXSIZE})
 
 add_library(bitmap_allocator STATIC src/block_allocator.c)
 

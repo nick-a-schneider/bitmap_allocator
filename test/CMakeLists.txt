@@ -7,16 +7,25 @@ if(NOT TARGET test_utils)
         GIT_TAG master
     )
     FetchContent_MakeAvailable(test_utils)
-    add_library(test_utils::test_utils ALIAS test_utils)
 endif()
-if(NOT TARGET test_utils::test_utils)
+if(NOT TARGET test_utils)
     message(FATAL_ERROR "test_utils not found")
 endif()
-
-add_executable(test_allocator test_block_allocator.c)
-target_link_libraries(test_allocator PRIVATE
-    bitmap_allocator::bitmap_allocator 
-    test_utils::test_utils
+set(TEST_SOURCES
+    block_allocator.c
+    tier_allocator.c
 )
 
-add_test(NAME allocator_tests COMMAND test_allocator)
+foreach(test_src IN LISTS TEST_SOURCES)
+    # Strip extension and prefix with "test_"
+    get_filename_component(test_name ${test_src} NAME_WE)  
+    set(exe_name "test_${test_name}")
+
+    add_executable(${exe_name} ${exe_name}.c)
+    target_link_libraries(${exe_name} PRIVATE
+        bitmap_allocator 
+        test_utils
+    )
+
+    add_test(NAME ${test_name} COMMAND ${exe_name})
+endforeach()

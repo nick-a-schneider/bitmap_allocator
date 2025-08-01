@@ -34,6 +34,13 @@
             "icon": { "id": "run" },
         },
         {
+            "label": "Run [tier] Unit Tests",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/build/test"
+            },
+            "command": "./test_tier_allocator",
+            "icon": { "id": "run" },
         }
     ]
 }
