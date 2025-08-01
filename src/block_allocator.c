@@ -1,4 +1,4 @@
-#include "allocator.h"
+#include "block_allocator.h"
 
 /* -- Private Function Declarations --------------------------------------- */
 
@@ -52,7 +52,7 @@ indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, inde
  *   is calculated based on the number of blocks that can fit in the provided memory.
  * - The other portion of the memory will be used to store the allocated blocks.
  */
-void initAllocator(Allocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
+void initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
     // Calculate the number of blocks that can fit in the provided memory
     indexSize_t num_blocks = size / block_size;
     // Calculate the size of the bitmap portion of the memory region
@@ -77,7 +77,7 @@ void initAllocator(Allocator* allocator, indexSize_t block_size, void* memory, i
  * It then returns a pointer to the start of the allocated block.
  * If no contiguous free blocks are available, it returns NULL.
  */
-void* allocate(Allocator* allocator, indexSize_t size) {
+void* blockAllocate(BlockAllocator* allocator, indexSize_t size) {
     // Calculate the number of blocks needed to allocate the requested size
     indexSize_t num_blocks = (size + allocator->block_size - 1) / allocator->block_size;
     // Find the index of the first contiguous free block in the bitmap
@@ -103,7 +103,7 @@ void* allocate(Allocator* allocator, indexSize_t size) {
  * It then clears the allocated bit for the block and all subsequent blocks in the bitmap.
  * It returns true if the deallocation was successful, false otherwise.
  */
-bool deallocate(Allocator* allocator, void* ptr) {
+bool blockDeallocate(BlockAllocator* allocator, void* ptr) {
     // Calculate the index of the block in the allocator's memory
     indexSize_t index = ((uint8_t*)ptr - (uint8_t*)allocator->memory.head) / allocator->block_size;
     // Check if the block is currently allocated

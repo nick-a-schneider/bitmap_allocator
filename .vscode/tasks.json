@@ -23,6 +23,17 @@
                 "--verbose"
             ],
             "icon": { "id": "gear" },
+        },
+        {
+            "label": "Run [block] Unit Tests",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/build/test"
+            },
+            "command": "./test_block_allocator",
+            "icon": { "id": "run" },
+        },
+        {
         }
     ]
 }

@@ -8,7 +8,7 @@ set(INDEXSIZE 16 CACHE STRING "Index size used by allocator")
 set(MAPSIZE   32 CACHE STRING "Index size used by allocator")
 add_compile_definitions(INDEXSIZE=${INDEXSIZE} MAPSIZE=${MAPSIZE})
 
-add_library(bitmap_allocator STATIC src/allocator.c)
+add_library(bitmap_allocator STATIC src/block_allocator.c)
 
 target_include_directories(bitmap_allocator PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

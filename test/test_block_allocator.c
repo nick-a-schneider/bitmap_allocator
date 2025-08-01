@@ -1,4 +1,4 @@
-#include "allocator.h"
+#include "block_allocator.h"
 #include "test_utils.h"
 #include <stdbool.h>
 
@@ -7,12 +7,12 @@ bool get_bit(mapSize_t* bitmap, indexSize_t index) {
     return (bitmap[index / MAPSIZE] & (1ULL << (index % MAPSIZE))) != 0;
 }
 
-void testInitAllocator(void) {
+void testInitBlockAllocator(void) {
 
     TEST_CASE("Even multiple of block size") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
-        initAllocator(&allocator, 16, memory, 128);
+        initBlockAllocator(&allocator, 16, memory, 128);
 
         ASSERT_EQUAL_INT(allocator.memory.size, 128 - 16, "incorrect size after initialization");
         ASSERT_EQUAL_INT(allocator.block_size, 16, "incorrect block size after initialization");
@@ -29,10 +29,10 @@ void testInitAllocator(void) {
     } CASE_NOT_IMPLEMENTED;
 
     TEST_CASE("head aligned correctly") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[4096];
         for (uint16_t block_size = 64; block_size  > 0; block_size--) {
-            initAllocator(&allocator, block_size, memory, 4096);
+            initBlockAllocator(&allocator, block_size, memory, 4096);
             ASSERT_TRUE(((uintptr_t)(allocator.memory.head)) % (2 * sizeof(mapSize_t)) == 0, "head not aligned for block size %d", block_size);
         }
     } CASE_COMPLETE;
@@ -41,13 +41,13 @@ void testInitAllocator(void) {
 void testAllocate() {
 
     TEST_CASE("allocating entire memory block") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
         for (int index = 0; index < 128; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 128);
-        void* block = allocate(&allocator, allocator.memory.size);
+        initBlockAllocator(&allocator, 16, memory, 128);
+        void* block = blockAllocate(&allocator, allocator.memory.size);
         ASSERT_EQUAL_PTR(block, allocator.memory.head, "incorrect block head returned");
-        void* block2 = allocate(&allocator, 16);
+        void* block2 = blockAllocate(&allocator, 16);
         ASSERT_EQUAL_PTR(block2, NULL, "invalid allocation returned non-null");
         ASSERT_TRUE(get_bit(allocator.bitmaps.heads, 0), "heads bit not set");
         for (uint16_t i = 0; i < allocator.bitmaps.size; i++) {
@@ -56,12 +56,12 @@ void testAllocate() {
     } CASE_COMPLETE;
         
     TEST_CASE("allocating impossibly large block") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
         for (int index = 0; index < 128; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 128);
+        initBlockAllocator(&allocator, 16, memory, 128);
 
-        void* block = allocate(&allocator, 1024);
+        void* block = blockAllocate(&allocator, 1024);
         ASSERT_EQUAL_PTR(block, NULL, "invalid allocation returned non-null");
 
         for (uint16_t i = 0; i < allocator.bitmaps.size; i++) {
@@ -71,15 +71,15 @@ void testAllocate() {
     } CASE_COMPLETE;
 
     TEST_CASE("allocating block that spans two bitmap blocks") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[4 * MAPSIZE];
         uint16_t offset = 0;
 
         for (int index = 0; index < (4 * MAPSIZE); index++) memory[index] = 0;
-        initAllocator(&allocator, 1, memory, 4 * MAPSIZE);
+        initBlockAllocator(&allocator, 1, memory, 4 * MAPSIZE);
 
-        void* block1 = allocate(&allocator, (3 * MAPSIZE) / 2);
-        void* block2 = allocate(&allocator, MAPSIZE);
+        void* block1 = blockAllocate(&allocator, (3 * MAPSIZE) / 2);
+        void* block2 = blockAllocate(&allocator, MAPSIZE);
 
         ASSERT_NOT_EQUAL_PTR(block1, NULL, "valid allocation returned null");
         ASSERT_NOT_EQUAL_PTR(block2, NULL, "valid allocation returned null");
@@ -107,13 +107,13 @@ void testAllocate() {
     } CASE_COMPLETE;
 
     TEST_CASE("allocating odd sized block") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
         for (int index = 0; index < 128; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 128);
+        initBlockAllocator(&allocator, 16, memory, 128);
 
-        void* block1 = allocate(&allocator, 17);
-        void* block2 = allocate(&allocator, 17);
+        void* block1 = blockAllocate(&allocator, 17);
+        void* block2 = blockAllocate(&allocator, 17);
         ASSERT_NOT_EQUAL_PTR(block1, NULL, "valid allocation returned null");
         ASSERT_NOT_EQUAL_PTR(block2, NULL, "valid allocation returned null");
 
@@ -129,16 +129,16 @@ void testAllocate() {
     } CASE_COMPLETE;
 }
 
-void testDeallocate() {
+void testDeblockAllocate() {
 
     TEST_CASE("deallocating block") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
         for (int index = 0; index < 128; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 128);
+        initBlockAllocator(&allocator, 16, memory, 128);
 
-        void* block = allocate(&allocator, 16);
-        ASSERT_TRUE(deallocate(&allocator, block), "deallocation failed");
+        void* block = blockAllocate(&allocator, 16);
+        ASSERT_TRUE(blockDeallocate(&allocator, block), "deallocation failed");
 
         ASSERT_FALSE(get_bit(allocator.bitmaps.heads, 0), "heads bit was set");
         ASSERT_FALSE(get_bit(allocator.bitmaps.used, 0), "used bit was set");
@@ -146,15 +146,15 @@ void testDeallocate() {
     } CASE_COMPLETE;
 
     TEST_CASE("deallocating block that spans two 16bit words in the bitmap") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[4096];
         for (int index = 0; index < 4096; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 4096);
+        initBlockAllocator(&allocator, 16, memory, 4096);
 
-        void* block1 = allocate(&allocator, 16 * 12);
-        void* block2 = allocate(&allocator, 16 * 20);
+        void* block1 = blockAllocate(&allocator, 16 * 12);
+        void* block2 = blockAllocate(&allocator, 16 * 20);
 
-        ASSERT_TRUE(deallocate(&allocator, block1), "deallocating block1 failed");
+        ASSERT_TRUE(blockDeallocate(&allocator, block1), "deallocating block1 failed");
 
         ASSERT_FALSE(get_bit(allocator.bitmaps.heads, 0), "heads bit still set after deallocation");
         for (uint16_t i = 0; i < 12; i++) {
@@ -166,18 +166,18 @@ void testDeallocate() {
             ASSERT_TRUE(get_bit(allocator.bitmaps.used, 12 + i), "next used bit[%d] cleared after deallocation", i);
         }
 
-        ASSERT_TRUE(deallocate(&allocator, block2), "deallocating block2 failed");
+        ASSERT_TRUE(blockDeallocate(&allocator, block2), "deallocating block2 failed");
 
     } CASE_COMPLETE;
 
     TEST_CASE("deallocating invalid block") {
-        Allocator allocator;
+        BlockAllocator allocator;
         uint8_t memory[128];
         for (int index = 0; index < 128; index++) memory[index] = 0;
-        initAllocator(&allocator, 16, memory, 128);
+        initBlockAllocator(&allocator, 16, memory, 128);
         void* block = (uint8_t*)(allocator.memory.head) + 2;
 
-        ASSERT_FALSE(deallocate(&allocator, block), "invalid block was deallocation without error");
+        ASSERT_FALSE(blockDeallocate(&allocator, block), "invalid block was deallocation without error");
         for (uint16_t i = 0; i < 8; i++) {
             ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit[%d] was cleared during invalid deallocation", i);
         }
@@ -186,8 +186,8 @@ void testDeallocate() {
 
 int main(void) {
     LOG_INFO("ALLOCATOR TESTS\n");
-    TEST_EVAL(testInitAllocator);
+    TEST_EVAL(testInitBlockAllocator);
     TEST_EVAL(testAllocate);
-    TEST_EVAL(testDeallocate);
+    TEST_EVAL(testDeblockAllocate);
     return testGetStatus();
 }

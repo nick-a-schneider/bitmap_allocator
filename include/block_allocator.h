@@ -51,7 +51,7 @@ typedef struct {
     BitMaps bitmaps;        ///< Bitmaps for managing memory allocation.
     MemoryBlock memory;     ///< The memory block being managed.
     indexSize_t block_size; ///< Size of each memory block.
-} Allocator;
+} BlockAllocator;
 
 /* -- Function Declarations ----------------------------------------------- */
 
@@ -66,7 +66,7 @@ typedef struct {
  * @note
  * The provided `memory` MUST point to a block of free, zero-initialized memory of size `size`.
  */
-void initAllocator(Allocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
+void initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
 
 /**
  * @brief Allocates a block of memory from the allocator.
@@ -75,7 +75,7 @@ void initAllocator(Allocator* allocator, indexSize_t block_size, void* memory, i
  * @param size The size of the memory block to allocate in bytes.
  * @return A pointer to the allocated memory block, or NULL if the space is unavailable.
  */
-void* allocate(Allocator* allocator, indexSize_t size);
+void* blockAllocate(BlockAllocator* allocator, indexSize_t size);
 
 /**
  * @brief Deallocates a previously allocated block of memory from the allocator.
@@ -85,6 +85,6 @@ void* allocate(Allocator* allocator, indexSize_t size);
  *
  * @return true if the block was successfully deallocated, false otherwise.
  */
-bool deallocate(Allocator* allocator, void* ptr);
+bool blockDeallocate(BlockAllocator* allocator, void* ptr);
 
 #endif // _ALLOCATOR_H_

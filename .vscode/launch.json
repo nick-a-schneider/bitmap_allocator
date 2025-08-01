@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Unit Test",
+            "name": "Debug [block] Unit Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/test/test_allocator.exe",
+            "program": "${workspaceFolder}/build/test/test_block_allocator.exe",
             "args": [],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",

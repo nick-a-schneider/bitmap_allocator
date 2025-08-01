@@ -13,7 +13,7 @@ if(NOT TARGET test_utils::test_utils)
     message(FATAL_ERROR "test_utils not found")
 endif()
 
-add_executable(test_allocator test_allocator.c)
+add_executable(test_allocator test_block_allocator.c)
 target_link_libraries(test_allocator PRIVATE
     bitmap_allocator::bitmap_allocator 
     test_utils::test_utils
