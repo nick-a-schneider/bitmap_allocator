@@ -1,27 +1,30 @@
 #include "block_allocator.h"
 #include "tier_allocator.h"
 
-void initTierAllocator(TierAllocator* allocator, void* memory, indexSize_t size) {
-    if (!allocator) return;
-    if (!memory) return;
-    if (!size) return;
-    if (!allocator->tiers) return;
-    if (!allocator->block_sizes) return;
-    if (!allocator->allocators) return;
+bool initTierAllocator(TierAllocator* allocator, void* memory, indexSize_t size) {
+    if (!allocator || !memory || !size) return false;
+    if (!allocator->tiers || !allocator->block_sizes || !allocator->allocators) return false;
 
-    indexSize_t tier_size = size / allocator->tiers;
+    indexSize_t raw_tier_size = size / allocator->tiers;
+    indexSize_t tier_size = raw_tier_size & ~(sizeof(mapSize_t) - 1);
+    if (tier_size == 0) return false;
+
     for (uint8_t i = 0; i < allocator->tiers; i++) {
         uint8_t* head = (uint8_t*)memory + tier_size * i;
-        initBlockAllocator(&allocator->allocators[i], allocator->block_sizes[i], head, tier_size);
+        bool res = initBlockAllocator(&allocator->allocators[i], allocator->block_sizes[i], head, tier_size);
+        if (!res) {
+             return false;
+        }
     }
-    return;
+    return true;
 }
 
 void* tierAllocate(TierAllocator* allocator, indexSize_t size) {
     if (!allocator) return NULL;
     if (!size) return NULL;
     for (uint8_t i = 0; i < allocator->tiers; i++) {
-        if (size <= allocator->block_sizes[i]) {
+        if (size <= allocator->block_sizes[i] ||
+            (i != allocator->tiers - 1 && size < allocator->block_sizes[i + 1])) {
             return blockAllocate(&allocator->allocators[i], size);
         }
     }
@@ -37,8 +40,8 @@ bool tierDeallocate(TierAllocator* allocator, void* ptr) {
     return false;
 }
 
-TierAllocator allocator = {
-    .block_sizes =  (uint16_t[]){16, 32, 64, 128},
-    .tiers = 4,
-    .allocators = (Allocator[4]){}
-};
+// TierAllocator allocator = {
+//     .block_sizes =  (uint16_t[]){16, 32, 64, 128},
+//     .tiers = 4,
+//     .allocators = (Allocator[4]){}
+// };

@@ -52,7 +52,8 @@ indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, inde
  *   is calculated based on the number of blocks that can fit in the provided memory.
  * - The other portion of the memory will be used to store the allocated blocks.
  */
-void initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
+bool initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
+    if (!allocator || !memory) return false;
     // Calculate the number of blocks that can fit in the provided memory
     indexSize_t num_blocks = size / block_size;
     // Calculate the size of the bitmap portion of the memory region
@@ -69,6 +70,7 @@ void initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void*
     allocator->memory.head = memory;  // Pointer to the start of the allocated block portion
     allocator->memory.size = allocator->bitmaps.size * block_size;  // Size of the allocated block portion
     allocator->block_size = block_size;  // Size of each block
+    return true;
 }
 
 /**

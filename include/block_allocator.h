@@ -66,7 +66,7 @@ typedef struct {
  * @note
  * The provided `memory` MUST point to a block of free, zero-initialized memory of size `size`.
  */
-void initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
+bool initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
 
 /**
  * @brief Allocates a block of memory from the allocator.
