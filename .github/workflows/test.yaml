@@ -41,6 +41,9 @@ jobs:
       # MAPSIZE=${{ matrix.config.mapsize }} INDEXSIZE=${{ matrix.config.indexsize }}
       run: cmake --build build --verbose
 
-    - name: Run Unit Tests
-      run: cd build/test/ && ./test_allocator
+    - name: Run Block Allocator Tests
+      run: cd build/test/ && ./test_block_allocator
+
+    - name: Run Tier Allocator Tests
+      run: cd build/test/ && ./test_tier_allocator
 
