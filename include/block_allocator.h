@@ -70,6 +70,8 @@ typedef struct {
  * 
  * @note
  * The provided `memory` MUST point to a block of free, zero-initialized memory of size `size`.
+ * 
+ * @return errno: [EINVAL, ENOMEM, BLOCK_ALLOCATOR_OK]
  */
 int initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
 
@@ -85,9 +87,9 @@ void* blockAllocate(BlockAllocator* allocator, indexSize_t size);
 /**
  * @brief Deallocates a previously allocated block of memory from the allocator.
  *
- * @param allocator The allocator to use for deallocation.
+ * @param allocator The BlockAllocator to use for deallocation.
  * @param ptr A pointer to the start of the block of memory to be deallocated.
  *
- * @return true if the block was successfully deallocated, false otherwise.
+ * @return errno: [EINVAL, EFAULT, BLOCK_ALLOCATOR_OK]
  */
 int blockDeallocate(BlockAllocator* allocator, void* ptr);
