@@ -1,6 +1,7 @@
 #include "block_allocator.h"
 #include "test_utils.h"
 #include <stdbool.h>
+#include <errno.h>
 
 // recreation of private function for test purposes
 bool get_bit(mapSize_t* bitmap, indexSize_t index) {
@@ -12,8 +13,8 @@ void test_initBlockAllocator(void) {
     TEST_CASE("Even multiple of block size") {
         BlockAllocator allocator;
         uint8_t memory[128];
-        bool res = initBlockAllocator(&allocator, 16, memory, 128);
-        ASSERT_TRUE(res, "initialization failed");
+        int res = initBlockAllocator(&allocator, 16, memory, 128);
+        ASSERT_EQUAL_INT(res, BLOCK_ALLOCATOR_OK, "initialization failed");
         ASSERT_EQUAL_INT(allocator.memory.size, 128 - 16, "incorrect size after initialization");
         ASSERT_EQUAL_INT(allocator.block_size, 16, "incorrect block size after initialization");
         ASSERT_EQUAL_INT(allocator.bitmaps.size, 7, "incorrect bitmap size after initialization"); 
@@ -138,7 +139,8 @@ void test_blockDeallocate() {
         (void*)initBlockAllocator(&allocator, 16, memory, 128);
 
         void* block = blockAllocate(&allocator, 16);
-        ASSERT_TRUE(blockDeallocate(&allocator, block), "deallocation failed");
+        int res = blockDeallocate(&allocator, block);
+        ASSERT_EQUAL_INT(res, BLOCK_ALLOCATOR_OK, "deallocation failed");
 
         ASSERT_FALSE(get_bit(allocator.bitmaps.heads, 0), "heads bit was set");
         ASSERT_FALSE(get_bit(allocator.bitmaps.used, 0), "used bit was set");
@@ -154,7 +156,8 @@ void test_blockDeallocate() {
         void* block1 = blockAllocate(&allocator, 16 * 12);
         void* block2 = blockAllocate(&allocator, 16 * 20);
 
-        ASSERT_TRUE(blockDeallocate(&allocator, block1), "deallocating block1 failed");
+        int res = blockDeallocate(&allocator, block1);
+        ASSERT_EQUAL_INT(res, BLOCK_ALLOCATOR_OK, "deallocating block1 failed");
 
         ASSERT_FALSE(get_bit(allocator.bitmaps.heads, 0), "heads bit still set after deallocation");
         for (uint16_t i = 0; i < 12; i++) {
@@ -166,7 +169,8 @@ void test_blockDeallocate() {
             ASSERT_TRUE(get_bit(allocator.bitmaps.used, 12 + i), "next used bit[%d] cleared after deallocation", i);
         }
 
-        ASSERT_TRUE(blockDeallocate(&allocator, block2), "deallocating block2 failed");
+        res = blockDeallocate(&allocator, block2);
+        ASSERT_EQUAL_INT(res, BLOCK_ALLOCATOR_OK, "deallocating block2 failed");
 
     } CASE_COMPLETE;
 
@@ -177,7 +181,8 @@ void test_blockDeallocate() {
         (void*)initBlockAllocator(&allocator, 16, memory, 128);
         void* block = (uint8_t*)(allocator.memory.head) + 2;
 
-        ASSERT_FALSE(blockDeallocate(&allocator, block), "invalid block was deallocation without error");
+        int res = blockDeallocate(&allocator, block);
+        ASSERT_EQUAL_INT(res, -EFAULT, "invalid block was deallocation without error");
         for (uint16_t i = 0; i < 8; i++) {
             ASSERT_FALSE(get_bit(allocator.bitmaps.heads, i), "heads bit[%d] was cleared during invalid deallocation", i);
         }

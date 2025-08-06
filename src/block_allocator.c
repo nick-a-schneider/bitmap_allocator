@@ -1,5 +1,5 @@
 #include "block_allocator.h"
-
+#include <errno.h>
 /* -- Private Function Declarations --------------------------------------- */
 
 /**
@@ -52,10 +52,11 @@ indexSize_t findContiguousFreeBlocks(mapSize_t num_blocks, mapSize_t* used, inde
  *   is calculated based on the number of blocks that can fit in the provided memory.
  * - The other portion of the memory will be used to store the allocated blocks.
  */
-bool initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
-    if (!allocator || !memory) return false;
+int initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size) {
+    if (!allocator || !memory || !block_size || !size) return -EINVAL;
     // Calculate the number of blocks that can fit in the provided memory
     indexSize_t num_blocks = size / block_size;
+    if (num_blocks == 0) return -ENOMEM;
     // Calculate the size of the bitmap portion of the memory region
     indexSize_t num_blocks_rounded = (num_blocks + MAPSIZE - 1) / MAPSIZE;
     indexSize_t bitmap_size = num_blocks_rounded * 2 * sizeof(mapSize_t);
@@ -70,7 +71,7 @@ bool initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void*
     allocator->memory.head = memory;  // Pointer to the start of the allocated block portion
     allocator->memory.size = allocator->bitmaps.size * block_size;  // Size of the allocated block portion
     allocator->block_size = block_size;  // Size of each block
-    return true;
+    return BLOCK_ALLOCATOR_OK;
 }
 
 /**
@@ -105,11 +106,12 @@ void* blockAllocate(BlockAllocator* allocator, indexSize_t size) {
  * It then clears the allocated bit for the block and all subsequent blocks in the bitmap.
  * It returns true if the deallocation was successful, false otherwise.
  */
-bool blockDeallocate(BlockAllocator* allocator, void* ptr) {
+int blockDeallocate(BlockAllocator* allocator, void* ptr) {
+    if (!allocator || !ptr) return -EINVAL;
     // Calculate the index of the block in the allocator's memory
     indexSize_t index = ((uint8_t*)ptr - (uint8_t*)allocator->memory.head) / allocator->block_size;
     // Check if the block is currently allocated
-    if (!getBit(allocator->bitmaps.heads, index)) return false;
+    if (!getBit(allocator->bitmaps.heads, index)) return -EFAULT;
     // Clear the allocated bit for the block
     clearBit(allocator->bitmaps.heads, index);
     // Traverse the bitmap, clearing the used bits for all blocks in the sequence
@@ -118,7 +120,7 @@ bool blockDeallocate(BlockAllocator* allocator, void* ptr) {
         // Break if we reach the end of the bitmap
         if (index >= allocator->bitmaps.size) break;
     }
-    return true;
+    return BLOCK_ALLOCATOR_OK;
 }
 
 /* -- Private Functions --------------------------------------------------- */

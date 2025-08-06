@@ -3,6 +3,7 @@
 #include "test_utils.h"
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
 #define MEMORY_SIZE 4096
 uint8_t memory[MEMORY_SIZE];
@@ -14,8 +15,8 @@ void test_initTierAllocator(void) {
             .tiers = 4,
             .allocators = (BlockAllocator[4]){}
         };
-        bool res = initTierAllocator(&allocator, (void*)memory, MEMORY_SIZE);
-        ASSERT_TRUE(res, "initialization failed");
+        int res = initTierAllocator(&allocator, (void*)memory, MEMORY_SIZE);
+        ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK, "initialization failed");
 
         uint16_t expected_size = MEMORY_SIZE / allocator.tiers;
         for (uint8_t i = 0; i < allocator.tiers; i++) {
@@ -32,8 +33,8 @@ void test_initTierAllocator(void) {
 
     TEST_CASE("invalid tier allocator") {
         TierAllocator* allocator =  NULL;
-        bool res = initTierAllocator(allocator, (void*)memory, MEMORY_SIZE);
-        ASSERT_FALSE(res, "initialization succeeded");
+        int res = initTierAllocator(allocator, (void*)memory, MEMORY_SIZE);
+        ASSERT_EQUAL_INT(res, -EINVAL, "initialization succeeded");
     } CASE_COMPLETE;
 
     TEST_CASE("invalid memory") {
@@ -42,8 +43,8 @@ void test_initTierAllocator(void) {
             .tiers = 4,
             .allocators = (BlockAllocator[4]){}
         };
-        bool res = initTierAllocator(&allocator, NULL, MEMORY_SIZE);
-        ASSERT_FALSE(res, "initialization succeeded");
+        int res = initTierAllocator(&allocator, NULL, MEMORY_SIZE);
+        ASSERT_EQUAL_INT(res, -EINVAL, "initialization succeeded");
     } CASE_COMPLETE;
 
     TEST_CASE("invalid size") {
@@ -52,8 +53,8 @@ void test_initTierAllocator(void) {
             .tiers = 4,
             .allocators = (BlockAllocator[4]){}
         };
-        bool res = initTierAllocator(&allocator, (void*)memory, 0);
-        ASSERT_FALSE(res, "initialization succeeded");
+        int res = initTierAllocator(&allocator, (void*)memory, 0);
+        ASSERT_EQUAL_INT(res, -EINVAL, "initialization succeeded");
     } CASE_COMPLETE;
 
     memset(memory, 0, MEMORY_SIZE);
@@ -134,26 +135,26 @@ void test_blockDeallocate(void) {
         
         TEST_CASE("tier 1:"){
             void* block = tierAllocate(&allocator, 16);
-            bool res = tierDeallocate(&allocator, block);
-            ASSERT_TRUE(res, "deallocation failed");
+            int res = tierDeallocate(&allocator, block);
+            ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK,  "deallocation failed");
         } CASE_COMPLETE;
 
         TEST_CASE("tier 2:"){
             void* block = tierAllocate(&allocator, 32);
-            bool res = tierDeallocate(&allocator, block);
-            ASSERT_TRUE(res, "deallocation failed");
+            int res = tierDeallocate(&allocator, block);
+            ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK, "deallocation failed");
         } CASE_COMPLETE;
 
         TEST_CASE("tier 3:"){
             void* block = tierAllocate(&allocator, 64);
-            bool res = tierDeallocate(&allocator, block);
-            ASSERT_TRUE(res, "deallocation failed");
+            int res = tierDeallocate(&allocator, block);
+            ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK, "deallocation failed");
         } CASE_COMPLETE;
 
         TEST_CASE("tier 4:"){
             void* block = tierAllocate(&allocator, 128);
-            bool res = tierDeallocate(&allocator, block);
-            ASSERT_TRUE(res, "deallocation failed");
+            int res = tierDeallocate(&allocator, block);
+            ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK, "deallocation failed");
         } CASE_COMPLETE;
     } CASE_COMPLETE;
 
@@ -168,8 +169,8 @@ void test_blockDeallocate(void) {
         (void*)initTierAllocator(&allocator, (void*)memory, 4096);
         
         void* block = tierAllocate(&allocator, 48); // should take 2x blocks for tier 2
-        bool res = tierDeallocate(&allocator, block);
-        ASSERT_TRUE(res, "deallocation failed");
+        int res = tierDeallocate(&allocator, block);
+        ASSERT_EQUAL_INT(res, TIER_ALLOCATOR_OK, "deallocation failed");
     } CASE_COMPLETE;
 }
 

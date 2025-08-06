@@ -1,9 +1,10 @@
-#ifndef _ALLOCATOR_H_
-#define _ALLOCATOR_H_
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+
+#define BLOCK_ALLOCATOR_OK 0 // success
 
 #ifndef MAPSIZE
 #define MAPSIZE  16
@@ -13,14 +14,18 @@
 #define INDEXSIZE  32
 #endif
 
+// These macros produce the maximum values for the given bit-width types
+// e.g., INDEXSIZE_MAX becomes UINT32_MAX if INDEXSIZE == 32
 #define INDEXSIZE_MAX FWD_MAX(INDEXSIZE)
 #define MAPSIZE_MAX FWD_MAX(MAPSIZE)
-
+// passes the argument to MAX_ARG — necessary for macro expansion to work properly
 #define FWD_MAX(arg) MAX_ARG(arg)
 #define MAX_ARG(arg) UINT##arg##_MAX
 
+// These macros resolve to the actual uintX_t type, e.g., uint16_t or uint32_t
 #define MAPSIZE_TYPE FWD_TYPE(MAPSIZE)
 #define INDEXSIZE_TYPE FWD_TYPE(INDEXSIZE)
+// passes the argument to TYPE_ARG — necessary for macro expansion to work properly
 #define FWD_TYPE(arg) TYPE_ARG(arg)
 #define TYPE_ARG(arg) uint##arg##_t
 
@@ -66,7 +71,7 @@ typedef struct {
  * @note
  * The provided `memory` MUST point to a block of free, zero-initialized memory of size `size`.
  */
-bool initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
+int initBlockAllocator(BlockAllocator* allocator, indexSize_t block_size, void* memory, indexSize_t size);
 
 /**
  * @brief Allocates a block of memory from the allocator.
@@ -85,6 +90,4 @@ void* blockAllocate(BlockAllocator* allocator, indexSize_t size);
  *
  * @return true if the block was successfully deallocated, false otherwise.
  */
-bool blockDeallocate(BlockAllocator* allocator, void* ptr);
-
-#endif // _ALLOCATOR_H_
+int blockDeallocate(BlockAllocator* allocator, void* ptr);
